@@ -71,3 +71,222 @@ let octal: number = 0o744; // 8진수 리터럴
 let notAnumber: number = NaN;
 let underscoreNum: number = 1_000_000; // 알아보기 쉽게 표기 가능
 ```
+
+## string
+```
+// 큰 따옴표 작음 따옴표 모두 가능
+let myName: string = "Soyoung";
+
+// Template String
+let fullName: string = "Mark Lee";
+let age: number = 31;
+
+let sentence: string = `Hello, My name is ${fullName}.
+
+I'll be ${age + 1} years old next year.`;
+
+console.log(sentence);
+```
+
+## symbol
+
+- new Symbol 로 사용할 수 없음
+- Symbol 함수를 이용해서 symbol 타입을 만들어낼 수 있다.
+- 함수로 사용할 땐 대문자 Symbol, 타입으로 사용할 땐 소문자 symbol
+- 각각의 심볼은 완전히 독립적으로 다른것을 가리킨다.
+- ES2015에서 추가된 타입이기 때문에 사용하려면 tsconfig.js 파일에 설정 추가해줘야 한다.
+  ```
+  "lib": [
+    "ES2015",
+    "DOM"
+  ]
+  ```
+- 프리미티브 타입의 값을 담아서 사용한다.
+- 고유하고 수정불가능한 값으로 만들어준다.
+- 주로 접근을 제어하기 위해 많이 쓰인다.
+
+```
+console.log(Symbol("foo") === Symbol("foo")); // false
+
+const sym = Symbol();
+const obj = {
+  [sym]: "value",
+};
+// obj['sym'] // 접근 불가
+obj[sym]; // 접근 가능
+```
+
+## null & undefined
+
+- void와 마찬가지로 그 자체로는 그다지 유용하지 않다.
+- 타입도 소문자, 값도 소문자
+
+```
+// 이 변수들에 할당할 수 있는 것들이 거의 없음!
+
+let u: undefined = undefined;
+let n: null = null;
+```
+
+- 그러나 컴파일 설정을 하게 되면 다르다.
+- undefined와 null은 모든 다른 타입의 서브 타입이 된다.
+- number에 null 또는 undefined를 할당할 수 있다는 의미
+- 컴파일 옵션에서 `--strictNullChecks`를 사용하면 서브 타입 안되고, 자기 자신한테만 할당 가능 (void 예외)
+  - 이 경우 null, undefined를 할당할 수 있게 하려면 union type을 이용해야 한다.
+
+```
+// tsconfig.json
+
+"strict": true // 아래 모든 옵션들을 아우르는 옵션. 이걸 켜두면 다른 타입에 null, undefined 할당 불가능.
+// "noImplicitAny": true,
+// "strictNullChecks": true,
+// "strictFunctionTypes": true,
+// "strictBindCallApply": true,
+// "strictPropertyInitialization": true,
+// "noImplicitThis": true,
+// "alwaysStrict": true,
+```
+
+```
+// let myName: string = null; // error
+
+// let u: undefined = null; // error
+let v: void = undefined; // null은 불가능
+
+// union 타입 (합집합)
+let union: string | null = null;
+union = 'Mark';
+```
+
+- 타입 가드 : 타입이 null일때만 어떻게 해라~ 조건 지정 가능.
+
+### null
+- 무언가가 있는데, 사용할 준비가 덜 된 상태.
+- javaScript 런타임에서 null을 **typeof** 연산자로 찍어보면 object가 나온다.
+- 타입스크립트에서는 null 타입은 null 값만 가질 수 있다.
+
+### undefined
+- 값을 할당하지 않거나, object의 property가 없을 때. 아예 준비가 안된 상태.
+- javaScript 런타임에서 undefined를 **typeof** 연산자로 찍어보면 undefined가 나온다.
+
+
+## object
+
+- **primitive type이 아닌 것** 을 나타내고 싶을 때 사용하는 타입
+- non-primitive type: not number, string, boolean, bigint(ES2020), symbol, null, undefined.
+
+```
+const person1 = { name: "Soyoung", age: 31 };
+// person1: { name: string; age: number; }
+
+const person2 = Object.create({ name: "Soyoung", age: 31 });
+// ObjectConstructor.create(o: object | null)
+
+
+// object literal
+let obj1: object = {};
+obj1 = {name: 'Soyoung'};
+obj1 = [{name: 'Soyoung'}];
+obj1 = 31; //  error
+obj1 = 'Soyoung'; // error
+obj1 = true; // error
+obj1 = Symbol; // error
+
+// create 함수 선언
+declare function create(o: object | null): void;
+
+create({ prop: 0 });
+create(null);
+create(33); // error
+create('string'); // error
+create(undefined); // error
+
+// Object.create
+Object.create(0); // error
+```
+
+## Array
+
+- Array는 객체
+- 사용방법 2가지 : Array<타입> or 타입[]
+```
+// 주로 이 방식을 더 많이씀.
+let list: number[] = [1, 2, 3];
+
+// 아래 방식은 jsx나 tsx에서 충돌날 수 있어서 사용 자제한다고 함.
+// let list: Array<number> = [1, 2, 3];
+```
+
+- 요소들을 공통의 타입으로 묶을 수 있어야 Array.
+- 그러나 다른 타입이 들어가더라도 union type으로 지정하면 된다.
+```
+let list: (number | string)[] = [1, 2, 3, "4"];
+```
+
+## Tuple
+
+- 길이가 정해져 있고, 앞 뒤의 타입이 정해져 있는 형태에 쓰인다.
+```
+let x: [string, number];
+
+x = ['hello', 10];
+// x = [10, 'Soyoung']; // error
+
+// x[2] = 'world'; // error
+```
+
+<img width="441" alt="스크린샷 2021-07-14 오후 1 01 19" src="https://user-images.githubusercontent.com/26291081/125559124-6d6c20ad-9fd1-4f5b-904d-c3106d96dfb7.png">
+
+
+## any
+
+- 어떠한 타입도 가능하다는 뜻의 타입
+- 최대한 쓰지 않는 것이 타입 시스템의 안전성을 높인다.
+- 그러나 사용할 수 밖에 없는 경우들이 있다. (단순히 로그를 찍어주거나, api 호출시 받는 값들...)
+
+```
+function returnAny(message: any): any {
+  console.log(message);
+}
+
+const any1 = returnAny("리턴 아무거나");
+// any1 type is any
+
+any1.toString(); // type 에러 뜨지 않는다.
+```
+- `noImplicitAny` 옵션을 켜두면 any를 써야하는데 쓰지 않은 경우 오류 표시 뜬다.
+
+
+- any는 객체를 통해서 전파된다.
+- 모든 편의는 타입 안전성을 잃는 대가로 온다는 것을 기억해야 한다.
+- 필요하지 않은 경우에는 any를 사용하지 않아야 한다.
+
+```
+let looselyTyped: any = {};
+
+const d = looselyTyped.a.b.c.d; // 에러 나지 않고, d의 타입도 any가 된다.
+```
+
+아래 코드에서는 매개변수 타입이 any로 지정되면서 변수 a, b, c 모두 any로 흘러가게 되는 모습이다.
+이럴 경우 any 타입이 전파되는 것을 막기 위해 가드를 세워줘야 한다.
+```
+function leakingAny(obj: any) {
+  const a = obj.num;
+  const b = a + 1;
+  return b;
+}
+
+const c = leakingAny({ num: 0 });
+```
+
+아래 코드처럼 수정하면 변수 a, b, c 모두 number 타입임을 확신할 수 있게 되어 안전성을 갖는다.
+```
+function leakingAny(obj: any) {
+  // a의 타입을 number로 지정해서 누수를 막는다.
+  const a:number = obj.num;
+  const b = a + 1;
+  return b;
+}
+
+const c = leakingAny({ num: 0 });
+```
