@@ -283,10 +283,112 @@ const c = leakingAny({ num: 0 });
 ```
 function leakingAny(obj: any) {
   // a의 타입을 number로 지정해서 누수를 막는다.
-  const a:number = obj.num;
+  const a: number = obj.num;
   const b = a + 1;
   return b;
 }
 
 const c = leakingAny({ num: 0 });
+```
+
+## unknown
+
+- any 타입의 위험성을 제한하기 위한 타입.
+- any 처럼 어떠한 타입도 할당 가능하지만, unknown 타입을 사용하려고 할 때
+  - 컴파일러가 타입을 추론할 수 있도록 타입 유형을 좁히거나(조건문 등으로 타입가드 적용)
+  - type assertion 등으로 타입을 확정지어야만 사용 가능하다.
+- 런타임 에러를 줄일 수 있을 것 같다.
+
+```
+declare const maybe: unknown;
+
+// 그냥 할당하면 에러
+const aNumber: number = maybe;
+
+if (maybe === true) {
+  // 이 안에서 maybe는 true type으로 지정된다. (타입 가드)
+  
+  const aBoolean: boolean = maybe;
+  // const aString: string = maybe; // error
+}
+
+if (typeof maybe === 'string') {
+  // 이 안에서 maybe는 string type으로 지정된다. (typeof 타입가드)
+  
+  const aString: string = maybe;
+  // const aBoolean: boolean = maybe; // error
+}
+```
+
+## never
+
+- 일반적으로 return에 사용된다.
+- return에 사용될 때, 함수의 body가 끝나지 않아야 한다. (throw Error 또는 무한 루프 등)
+
+```
+// 에러 던지기
+function error(message: string): never {
+  throw new Error(message);
+}
+
+function fail() {
+  return error("failed");
+}
+
+// 무한 루프
+function infiniteLoop(): never {
+  while (true) {}
+}
+```
+
+- never는 모든 타입의 subtype이며, 모든 타입에 할당 가능하다.
+- 그러나 never에는 어떠한 타입도 할당할 수 없다. any 조차도...
+- 잘못된 타입을 넣는 실수를 막고자 할 때 사용된다.
+
+```
+let a: string = 'hello';
+
+if (typeof a !== 'string') {
+  // a type is never
+  // 어떠한 것도 할당할 수 없다.
+  a;
+}
+```
+
+```
+declare const a: string | number;
+
+if (typeof a !== 'string') {
+  // a type is number
+  a;
+}
+```
+
+```
+// 타입이 변수처럼 쓰이는 제네릭
+// T가 만약에 string이면 'T & { [index: string]: any }' 이걸 만들고 아니면 never
+type Indexable<T> = T extends string ? T & { [index: string]: any } : never;
+
+// b type is never
+const b: Indexable<{}> = ''; // error
+```
+
+## void
+
+- 어떠한 타입도 가지지 않는 빈 상태
+- 값은 없고 타입만 있어서 void라는 값을 쓸 순 없음.
+- 변수에 void 타입을 annotation 하는 것이 아니라 값을 반환하지 않는 함수의 return 타입으로 주로 사용됨.
+- 그 외에는 거의 사용성이 없음.
+
+```
+// 반환하는게 없어서 return type은 자동으로 void로 추론된다.
+function returnVoid(message: string) {
+  console.log(message);
+  return;
+  // return undefined; // 유일하게 허용되는 타입
+}
+
+// r type is void
+// 그러나 void를 가지고 뭘 할 수 없기 때문에 변수에 할당하는 것도 의미없다.
+const r = returnVoid('리턴이 없다.');
 ```
